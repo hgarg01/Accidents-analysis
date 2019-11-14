@@ -8,7 +8,8 @@ In this project, we aim to answer the following questions :
 3. Can we warn the user of high risk accident areas on the route chosen by user in real time?
 ## Secondary Data
 This project uses the following databases :-
-1. Accidents Database : Obtained from govt of UK website https://data.gov.uk/dataset/cb7ae6f0-4be6-4935-9277-47e5ce24a11f/road-safety-data It includes all the details about the accident including the location of the accident, Road/Weather conditions at the time of accident and 2. Vehicle Database : This data is also obtained from the above mentioned source and includes details regarding the vehicles involved in the accidents. 
+1. Accidents Database : Obtained from govt of UK website https://data.gov.uk/dataset/cb7ae6f0-4be6-4935-9277-47e5ce24a11f/road-safety-data It includes all the details about the accident including the location of the accident, Road/Weather conditions at the time of accident. For the purpose of this project data for 2 years - 2015 and 2016 has been considered.
+2. Vehicle Database : This data is also obtained from the above mentioned source and includes details regarding the vehicles involved in the accidents. 
 3. Traffic Flow Data : This data describes the annual average volume of traffic flow at the location of the accident and has been obtained from https://data.gov.uk/dataset/9562c512-4a0b-45ee-b6ad-afc0f99b841f/highways-england-network-journey-time-and-traffic-flow-data
 ## Project Files
 This Project is being built in R and is divided into 3 files : AccidentAnalysis, Models and FrontEnd. AccidentAnalysis includes the detailes analysis of the 3 tables and all the preprocessing. Models file contains the algorithms used to build models and evaluate performance and FrontEnd contains the front end of the project being developed in RShiny. 
