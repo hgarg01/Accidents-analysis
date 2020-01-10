@@ -32,6 +32,7 @@ veh_2016 <- read.csv("c:/users/harsh/documents/project resources/datasets for ac
 #Extract 2 years of data from AADF
 AADF2015 <- sqldf('Select * from AADF where year = 2015')
 AADF2016 <- sqldf('Select * from AADF where year = 2016')
+AADF_2015_2016 <- sqldf('Select * from AADF where year = 2015 or year = 2016')
 
 #Check for the number of incomplete rows in datasets
 nrow(accidents_2015[!complete.cases(accidents_2015),])
@@ -979,23 +980,23 @@ ggplot(accidents_2015)+geom_bar(aes(x=Road_Type, fill = as.factor(Accident_Sever
 
 #Analysis of AADF data
 #Average count points in each year
-sqldf('select avg(X) from (select count(distinct count_point_id) as X from AADF_2015_to_2017 group by year)')
+sqldf('select avg(X) from (select count(distinct count_point_id) as X from AADF_2015_2016 group by year)')
 #Different regions in AADF data
-sqldf('select count(distinct region_id) from AADF_2015_to_2017') 
-table(AADF_2015_to_2017$road_name)
+sqldf('select count(distinct region_id) from AADF_2015_2016') 
+table(AADF_2015_2016$road_name)
 
 #No of Local authorities in every region
-sqldf('select region_name, count(distinct local_authority_id) from AADF_2015_to_2017 group by region_id')
+sqldf('select region_name, count(distinct local_authority_id) from AADF_2015_2016 group by region_id')
 #No of distinct road names
-sqldf('select count(distinct road_name) from AADF_2015_to_2017') 
+sqldf('select count(distinct road_name) from AADF_2015_2016') 
 
 #No of count points on every road  in every authority in every region
-sqldf('select region_name, local_authority_name, count(distinct count_point_id) from AADF_2015_to_2017 group by region_id, local_authority_id')
+sqldf('select region_name, local_authority_name, count(distinct count_point_id) from AADF_2015_2016 group by region_id, local_authority_id')
 
 #Different count points on M1
 sqldf('select road_name, count(distinct count_point_id) from AADF2015 where road_name = "M1"')
 sqldf('select road_name, count(distinct count_point_id) from AADF2015 where road_name = "A101"')
-sqldf('select region_name, local_authority_name,road_name, count(distinct count_point_id) from AADF_2015_to_2017 group by region_id, local_authority_id,road_name')
+sqldf('select region_name, local_authority_name,road_name, count(distinct count_point_id) from AADF_2015_2016 group by region_id, local_authority_id,road_name')
 
 ###################################################################################################################
 
@@ -1014,7 +1015,7 @@ levels(veh_2016$Sex_of_Driver) <- c(3,1,2,3)
 
 
 ggplot(veh_2015)+geom_bar(aes(x=Age_of_Driver))+ theme_light()+labs(y = "Number of accidents",title= "No of Accidents vs Age of Driver")
-ggplot(veh_2015)+geom_bar(aes(x=Age_Band_of_Driver))+ theme_light()+labs(y = "Number of accidents",title= "No of Accidents vs Age Band of Driver")
+ggplot(veh_2015)+geom_bar(aes(x=Age_Band_of_Driver, fill = Sex_of_Driver))+ theme_light()+labs(y = "Number of accidents",title= "No of Accidents vs Age Band of Driver")
 ggplot(veh_2015)+geom_bar(aes(x=Age_Band_of_Driver, fill = Sex_of_Driver))+ theme_light()+labs(y = "Number of accidents",title= "No of Accidents vs Age and sex of Driver")
 
 #################################################################################################################
@@ -1049,6 +1050,7 @@ test <- acc_AADF_15[which(is.na(acc_AADF_15$all_motor_vehicles)),]
 model_lm_2015<- lm(all_motor_vehicles ~ Latitude+Longitude+X1st_Road_Class+Road_Type, data = train)
 summary(model_lm_2015)
 model_lm_2015$xlevels[["X1st_Road_Class"]] <- union(model_lm_2015$xlevels[["X1st_Road_Class"]], levels(test[["X1st_Road_Class"]]))
+options(warn = -1)
 test$all_motor_vehicles <- predict(model_lm_2015, test, type = "response")
 acc_AADF_15 <- rbind(train,test)
 
@@ -1060,6 +1062,7 @@ model_lm_2016$xlevels[["X1st_Road_Class"]] <- union(model_lm_2016$xlevels[["X1st
 model_lm_2016$xlevels[["Road_Type"]] <- union(model_lm_2016$xlevels[["Road_Type"]], levels(test[["Road_Type"]]))
 test$all_motor_vehicles <- predict(model_lm_2016, test, type = "response")
 acc_AADF_16 <- rbind(train,test)
+options(warn = 1)
 
 ####################################################################################################################
 #Join Accident and vehicles databases
@@ -1072,7 +1075,7 @@ acc_AADF_veh_16 <- acc_AADF_veh_16[,c(2:8, 10:26,28,39:43,45)]
 combined_df <- rbind(acc_AADF_veh_15, acc_AADF_veh_16)
 
 #Merging levels with minimal values
-levels(combined_df$Journey_Purpose_of_Driver) 
+levels(combined_df$Weather_Conditions) 
 levels(combined_df$Journey_Purpose_of_Driver) = c(6,1,2,3,4,5,6)
 levels(combined_df$Weather_Conditions) = c(1,2,3,4,5,6,7,8,9,-1,1,2,3,4,5,6,7,8,9)
 acc_AADF_veh_15$Age_of_Driver <- as.numeric(acc_AADF_veh_15$Age_of_Driver)
