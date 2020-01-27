@@ -36,7 +36,7 @@ ui <- dashboardPage(
 )
 
 server <- function(input, output) {
-  register_google( my_key)
+ # register_google( my_key)
   
   
   #observe teh selction of variables and draw plots
