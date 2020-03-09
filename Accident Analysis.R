@@ -29,6 +29,7 @@ veh_2015 <- read.csv("c:/users/harsh/documents/project resources/datasets for ac
 veh_2016 <- read.csv("c:/users/harsh/documents/project resources/datasets for accidents/vehicles/Vehicles_2016.csv")
 
 
+
 #Extract 2 years of data from AADF
 AADF2015 <- sqldf('Select * from AADF where year = 2015')
 AADF2016 <- sqldf('Select * from AADF where year = 2016')
@@ -40,6 +41,14 @@ accidents_2015 <- na.omit(accidents_2015)
 nrow(accidents_2016[!complete.cases(accidents_2016),])
 accidents_2016 <- na.omit(accidents_2016)
 nrow(AADF[!complete.cases(AADF),])
+
+#find out columns having values -1, which means missing data
+sapply(accidents_2015, function(x)sum(x=='-1'))
+#delete the columns with more than 30% values as -1
+accidents_2015 <- select(accidents_2015, - c( X2nd_Road_Class,Junction_Control))
+accidents_2016 <- select(accidents_2016, - c( X2nd_Road_Class,Junction_Control))
+
+
 
 #Changing values of Local_authority_district from number to a string so they are compatible with AADF dataset
 library(plyr)
@@ -874,12 +883,16 @@ accidents_2015$Local_Authority_.District. <- map_districtname(accidents_2015)
 accidents_2016$Local_Authority_.District. <- map_districtname(accidents_2016)
 
 #Change the values of 1st road class values from numeric to string
-accidents_2015$X1st_Road_Class = mapvalues(accidents_2015$X1st_Road_Class, from = c(1,2,3,4,5,6), to = c('M','A', 'A','B','C','U'))
-accidents_2016$X1st_Road_Class = mapvalues(accidents_2016$X1st_Road_Class, from = c(1,2,3,4,5,6), to = c('M','A', 'A','B','C','U'))
+accidents_2015$X1st_Road_Class_str = mapvalues(accidents_2015$X1st_Road_Class, from = c(1,2,3,4,5,6), to = c('M','A', 'A','B','C','U'))
+accidents_2016$X1st_Road_Class_str = mapvalues(accidents_2016$X1st_Road_Class, from = c(1,2,3,4,5,6), to = c('M','A', 'A','B','C','U'))
 
 #Concatenate the 1st_Road_Class and 1st_Road_Number to create Road_number that is consistent with AADF database
-accidents_2015$road_name <- with(accidents_2015, paste0(X1st_Road_Class,X1st_Road_Number))
-accidents_2016$road_name <- with(accidents_2016, paste0(X1st_Road_Class,X1st_Road_Number))
+accidents_2015$road_name <- with(accidents_2015, paste0(X1st_Road_Class_str,X1st_Road_Number))
+accidents_2016$road_name <- with(accidents_2016, paste0(X1st_Road_Class_str,X1st_Road_Number))
+
+#Drop the string road number after this
+accidents_2015 <- subset(accidents_2015, select = -X1st_Road_Class_str)
+accidents_2016 <- subset(accidents_2016, select = -X1st_Road_Class_str)
 
 #Exploratory data analysis
 #Extract months from the dates column
@@ -903,7 +916,7 @@ ggplot(accidents_2015)+geom_bar(aes(x=Time_Hour, fill = as.factor(Accident_Sever
 
 library(dplyr)
 #Convert caregorical variables into factors in the accidents database
-cols <-c("Accident_Severity","Day_of_Week","X1st_Road_Class","Road_Type","Junction_Detail","Junction_Control","Pedestrian_Crossing.Human_Control","Pedestrian_Crossing.Physical_Facilities","Light_Conditions","Weather_Conditions","Road_Surface_Conditions","Special_Conditions_at_Site","Carriageway_Hazards","Urban_or_Rural_Area")
+cols <-c("Accident_Severity","Day_of_Week","X1st_Road_Class","Road_Type","Junction_Detail","Pedestrian_Crossing.Human_Control","Pedestrian_Crossing.Physical_Facilities","Light_Conditions","Weather_Conditions","Road_Surface_Conditions","Special_Conditions_at_Site","Carriageway_Hazards","Urban_or_Rural_Area")
 accidents_2015[,cols] <-data.frame(apply(accidents_2015[cols],2,as.factor))
 accidents_2016[,cols] <-data.frame(apply(accidents_2016[cols],2,as.factor))
 
@@ -913,7 +926,7 @@ cor(accidents_2015$Longitude,accidents_2015$Location_Easting_OSGR)
 cor(accidents_2015$Latitude,accidents_2015$Location_Northing_OSGR)
 
 #Dropping unnecessary variables from accidents data
-drop_columns <- c('Police_Force','X2nd_Road_Class','X2nd_Road_Number','Local_Authority_.Highway.','Did_Police_Officer_Attend_Scene_of_Accident','LSOA_of_Accident_Location','Location_Easting_OSGR','Location_Northing_OSGR')
+drop_columns <- c('Police_Force','X2nd_Road_Number','Local_Authority_.Highway.','Did_Police_Officer_Attend_Scene_of_Accident','LSOA_of_Accident_Location','Location_Easting_OSGR','Location_Northing_OSGR')
 accidents_2015 <- accidents_2015 %>% select(-one_of(drop_columns)) 
 accidents_2016 <- accidents_2016 %>% select(-one_of(drop_columns)) 
 
@@ -1024,6 +1037,7 @@ ggplot(veh_2015)+geom_bar(aes(x=Age_Band_of_Driver, fill = Sex_of_Driver))+ them
 temp_2015 <- merge(accidents_2015, AADF2015, by = "road_name", all.x = TRUE)
 temp_2015$dist <- distHaversine(temp_2015[,c("Longitude","Latitude")], temp_2015[,c("longitude","latitude")])
 temp_2016 <- merge(accidents_2016, AADF2016, by = "road_name", all.x = TRUE)
+
 temp_2016$dist <- distHaversine(temp_2016[,c("Longitude","Latitude")], temp_2016[,c("longitude","latitude")])
 
 
@@ -1034,7 +1048,7 @@ temp_2015 <- temp_2015 %>% arrange(dist) %>% distinct(key, .keep_all = TRUE)
 temp_2016 <- temp_2016 %>% arrange(dist) %>% distinct(key, .keep_all = TRUE)
 
 keep <- c("road_name", "Accident_Index","Longitude","Latitude","Accident_Severity","Number_of_Vehicles","Number_of_Casualties","Day_of_Week","Local_Authority_.District.","X1st_Road_Class", "X1st_Road_Number","Road_Type",                            
-          "Junction_Detail","Junction_Control","Pedestrian_Crossing.Human_Control","Pedestrian_Crossing.Physical_Facilities","Light_Conditions","Weather_Conditions",                   
+          "Junction_Detail","Pedestrian_Crossing.Human_Control","Pedestrian_Crossing.Physical_Facilities","Light_Conditions","Weather_Conditions",                   
           "Road_Surface_Conditions","Special_Conditions_at_Site","Carriageway_Hazards","Urban_or_Rural_Area","Date","Month","Time_Hour","all_motor_vehicles")
 acc_AADF_15 <- temp_2015[keep]
 acc_AADF_16 <- temp_2016[keep]
@@ -1056,7 +1070,7 @@ acc_AADF_15 <- rbind(train,test)
 
 train <- acc_AADF_16[which(!is.na(acc_AADF_16$all_motor_vehicles)),]
 test <- acc_AADF_16[which(is.na(acc_AADF_16$all_motor_vehicles)),]
-model_lm_2016 <- glm(all_motor_vehicles ~ Latitude+Longitude+X1st_Road_Class+Road_Type, data = train)
+model_lm_2016 <- lm(all_motor_vehicles ~ Latitude+Longitude+X1st_Road_Class+Road_Type, data = train)
 summary(model_lm_2016)
 model_lm_2016$xlevels[["X1st_Road_Class"]] <- union(model_lm_2016$xlevels[["X1st_Road_Class"]], levels(test[["X1st_Road_Class"]]))
 model_lm_2016$xlevels[["Road_Type"]] <- union(model_lm_2016$xlevels[["Road_Type"]], levels(test[["Road_Type"]]))
@@ -1097,7 +1111,7 @@ comparison
 createTable(comparison)
 
 
-drop_columns <- c("Date", "Junction_Control","Pedestrian_Crossing.Human_Control","Weather_Conditions","Road_Surface_Conditions","Light_Conditions","Special_Conditions_at_Site","Carriageway_Hazards","Age_of_Driver","Vehicle_Type","Time_Hour","Month")
+drop_columns <- c("Date","Pedestrian_Crossing.Human_Control","Weather_Conditions","Road_Surface_Conditions","Light_Conditions","Special_Conditions_at_Site","Carriageway_Hazards","Age_of_Driver","Vehicle_Type","Time_Hour","Month")
 combined_df <- combined_df %>% select(-one_of(drop_columns)) 
 
 
