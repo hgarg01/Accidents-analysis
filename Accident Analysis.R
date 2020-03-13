@@ -894,7 +894,6 @@ accidents_2016$road_name <- with(accidents_2016, paste0(X1st_Road_Class_str,X1st
 accidents_2015 <- subset(accidents_2015, select = -X1st_Road_Class_str)
 accidents_2016 <- subset(accidents_2016, select = -X1st_Road_Class_str)
 
-#Exploratory data analysis
 #Extract months from the dates column
 accidents_2015$Month <- as.factor(strftime(x= as.Date(accidents_2015$Date),format = "%B"))
 accidents_2016$Month <- as.factor(strftime(x= as.Date(accidents_2016$Date),format = "%B"))
@@ -1014,7 +1013,7 @@ sqldf('select region_name, local_authority_name,road_name, count(distinct count_
 ###################################################################################################################
 
 #Analysis of vehicle datase
-cols <- c("Vehicle_Type","Journey_Purpose_of_Driver","Sex_of_Driver","Age_Band_of_Driver")
+cols <- c("Vehicle_Type","Journey_Purpose_of_Driver","Sex_of_Driver","Age_Band_of_Driver","Vehicle_Manoeuvre")
 veh_2015[,cols] <-lapply(veh_2015[,cols],factor)
 veh_2016[,cols] <-lapply(veh_2016[,cols],factor)
 
@@ -1081,10 +1080,14 @@ options(warn = 1)
 ####################################################################################################################
 #Join Accident and vehicles databases
 acc_AADF_veh_15 <- merge(acc_AADF_15,veh_2015[!duplicated(veh_2015$Accident_Index),], by = "Accident_Index", all.x = TRUE)
-acc_AADF_veh_15 <- acc_AADF_veh_15[,c(2:8, 10:26,28,39:43,45)]
+keep <- c("road_name", "Longitude","Latitude","Accident_Severity","Number_of_Vehicles","Number_of_Casualties","Day_of_Week","X1st_Road_Class", "Road_Type",                            
+          "Junction_Detail","Pedestrian_Crossing.Human_Control","Pedestrian_Crossing.Physical_Facilities","Light_Conditions","Weather_Conditions",                   
+          "Road_Surface_Conditions","Special_Conditions_at_Site","Carriageway_Hazards","Urban_or_Rural_Area","Date","Month","Time_Hour","all_motor_vehicles",
+          "Vehicle_Type","Journey_Purpose_of_Driver","Sex_of_Driver","Age_Band_of_Driver","Vehicle_Manoeuvre","Age_of_Driver","Engine_Capacity_.CC.","Age_of_Vehicle")     
+acc_AADF_veh_15 <- acc_AADF_veh_15[keep]
 
 acc_AADF_veh_16<- merge(acc_AADF_16,veh_2016[!duplicated(veh_2016$Accident_Index),], by = "Accident_Index", all.x = TRUE)
-acc_AADF_veh_16 <- acc_AADF_veh_16[,c(2:8, 10:26,28,39:43,45)]
+acc_AADF_veh_16 <- acc_AADF_veh_16[keep]
 
 combined_df <- rbind(acc_AADF_veh_15, acc_AADF_veh_16)
 
@@ -1105,35 +1108,40 @@ combined_df$Month <- as.numeric(combined_df$Month)
 combined_df$Month_X<- sin(2*pi*combined_df$Month/12)
 combined_df$Month_Y <- cos(2*pi*combined_df$Month/12)
 
+#feature engineering on road_name
+mean_encoding<- function(df){
+  df_road <- select(df,road_name, Accident_Severity)
+  df1 <- df_road %>% group_by(road_name) %>%  summarise(total = n())
+  df2 <- df_road %>% group_by(road_name) %>% filter(Accident_Severity == 1) %>% count()
+  df3 <- merge(df1,df2,by = "road_name", all.x= TRUE)
+  df3[is.na(df3)] <- 0
+  df3$mean_encode <- df3$n/df3$total
+  df <- merge(df,df3,by = "road_name", all.x = TRUE)
+  df <- select(df,-c(road_name,total,n))
+  df[is.na(df)] <- 0
+  return(df)
+}
+
+combined_df <- mean_encoding(combined_df)
+
+###########################################################################################
 #Calculate importance of all the features in the dataset and drop the features with high p-values
 comparison <- compareGroups(Accident_Severity~., data = combined_df,method = 1 )
 comparison
 createTable(comparison)
 
 
-drop_columns <- c("Date","Pedestrian_Crossing.Human_Control","Weather_Conditions","Road_Surface_Conditions","Light_Conditions","Special_Conditions_at_Site","Carriageway_Hazards","Age_of_Driver","Vehicle_Type","Time_Hour","Month")
+drop_columns <- c("Date","Pedestrian_Crossing.Human_Control","Weather_Conditions","Light_Conditions","Road_Surface_Conditions","Special_Conditions_at_Site","Carriageway_Hazards","Vehicle_Type","Month","Time_Hour")
 combined_df <- combined_df %>% select(-one_of(drop_columns)) 
 
 
-#feature engineering on road_name
-df <- combined_df
-df_road <- select(df,road_name, Accident_Severity)
-df1 <- df_road %>% group_by(road_name) %>%  summarise(total = n())
-df2 <- df_road %>% group_by(road_name) %>% filter(Accident_Severity == 1) %>% count()
-df3 <- merge(df1,df2,by = "road_name", all.x= TRUE)
-df3[is.na(df3)] <- 0
-df3$mean_encode <- df3$n/df3$total
-df <- merge(df,df3,by = "road_name", all.x = TRUE)
-df <- df[,-c(1,24,25)]
-df[is.na(df)] <- 0
-ggplot(df)+geom_density(aes(x=df$mean_encode, color = Accident_Severity))
-combined_df <- df
-write.csv2(combined_df, file = "final_df.csv")
-saveRDS(combined_df, "final_df.rds")
+ggplot(combined_df)+geom_density(aes(x=combined_df$mean_encode, color = Accident_Severity))
+write.csv(combined_df, "C:\\Users\\harsh\\Documents\\R\\Project1\\final_df_without_norm.csv",row.names = FALSE)
+saveRDS(combined_df, "C:\\Users\\harsh\\Documents\\R\\Project1\\final_df_wo_norm.rds")
 
 
 #Normalization of all the numeric variables
-var_to_norm <- c("all_motor_vehicles","Age_of_Driver","Engine_Capacity_.CC.", "Age_of_Vehicle")
+var_to_norm <- select_if(combined_df,is.numeric)
 boxplot(acc_AADF_veh_15[var_to_norm])
 acc_AADF_veh_15[var_to_norm]<-lapply(acc_AADF_veh_15[var_to_norm], function(x) {
       y<-scale(x, center=TRUE, scale=TRUE)
@@ -1147,6 +1155,10 @@ table(combined_df$Accident_Severity)
 
 #Check proportion of imbalance
 prop.table(table(combined_df$Accident_Severity))
+train_final_df_wo_norm <- 
+
+
+#stratified sampling of dataset
 levels(combined_df$Accident_Severity) <- c( "fatal", "serious", "mild")
 balance.sample <- RandUnderClassif(Accident_Severity~., combined_df, C.perc = "balance", repl = FALSE)
 write.csv2(balance.sample, file = "balance_sample.csv")
