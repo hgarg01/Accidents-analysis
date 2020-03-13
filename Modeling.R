@@ -7,18 +7,22 @@ library(pROC)
 library(naivebayes)
 library(dplyr)
 
+#Read the data frame and set factor variables
 df=readRDS("C:/Users/harsh/Documents/R/Project1/final_df.rds")
-df1 = read.csv("c:/users/harsh/documents/R/Project1/final_df.csv")
-
-df 
+df = read.csv("c:/users/harsh/documents/R/Project1/final_df_without_norm.csv")
+cat_vars <- c("Accident_Severity", "Day_of_Week", "X1st_Road_Class", "Road_Type", "Junction_Detail", "Pedestrian_Crossing.Physical_Facilities","Urban_or_Rural_Area", "Journey_Purpose_of_Driver","Sex_of_Driver", "Age_Band_of_Driver","Vehicle_Manoeuvre" )
+df[,cat_vars] <-data.frame(apply(df[cat_vars],2,as.factor))
+ 
 
 #under.sample <- RandUnderClassif(Accident_Severity~., df, C.perc = list(fatal = 1, serious= 0.6, mild = 0.2))
 c <- compareGroups(Accident_Severity~., data = df, method = 1)
 createTable(c)
 
-set.seed(200)
+
 table(df$Accident_Severity)
 
+#Create training set - 60% of data, Test set - 20% of data and validation set - 20% of data
+set.seed(123)
 trainIndex <- createDataPartition(df$Accident_Severity, p = .60,list=FALSE)
 train_set <- df[trainIndex,]
 temp <- df[-trainIndex,]
@@ -26,7 +30,9 @@ valIndex <- createDataPartition(temp$Accident_Severity, p = .50,list=FALSE)
 
 validation_set <- temp[valIndex,]
 test_set <- temp[-valIndex,]
-smoted_train <- SmoteClassif(Accident_Severity~., train_set, C.perc = list('1' = 4,'2'= 0.8,'3'= 0.4), k = 4, dist = "HEOM")
+
+#Create a smoted training set by oversampling minority class and undersampling majority classes
+smoted_train_4_0.8_0.4 <- SmoteClassif(Accident_Severity~., train_set, C.perc = list('1' = 4,'2'= 0.8,'3'= 0.4), k = 4, dist = "HEOM")
 
 table(train_set$Accident_Severity)
 table(smoted_train$Accident_Severity)
