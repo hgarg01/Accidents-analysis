@@ -21,10 +21,9 @@ ui <- dashboardPage(
     #create the dashboard body with 3 tabs
     tabItems(
       tabItem(tabName = "tab_analysis", 
-              selectInput("select_var", "Select Variables", choices = c("Road_Type","X1st_Road_Class", "Light_Conditions" )),
-              plotOutput("coolplot"),
-              br(),br(),
-              leafletOutput("my_map")),
+                leafletOutput("my_map"),
+                selectInput("select_var", "Select Variables", choices = c("Road_Type","X1st_Road_Class", "Light_Conditions" )),
+                plotOutput("coolplot"),br(),br(),br()),
       tabItem(tabName = "tab_modeling", h1("Modeling Menu Activated")),
       tabItem(tabName = "tab_prediction", 
               textInput("txtPcodeSrc", "Enter Source Address", value = "HA9 8SR"),
@@ -36,7 +35,8 @@ ui <- dashboardPage(
 )
 
 server <- function(input, output) {
- # register_google( my_key)
+  register_google( my_key)
+  set_key(my_key)
   
   
   #observe teh selction of variables and draw plots
@@ -49,11 +49,12 @@ server <- function(input, output) {
   #Plot accident data plots on UK map
   output$my_map = renderLeaflet({
     m <- leaflet(data = df_acc) %>% addTiles() %>%
-      addCircleMarkers(lng = ~Longitude,lat = ~Latitude, radius = 0.001, color = "red" , fillColor = df_acc$Accident_Severity)
+      addMarkers(clusterOptions = markerClusterOptions())
+                 #itude,lat = ~Latitude, radius = 0.001, color = "red" , fillColor = df_acc$Accident_Severity)
   })
   
   #Plot the route between starting and the end address
-  output$map_route <- renderGoogle_map({google_map(location = lonlat1,
+  output$map_route <- renderGoogle_map({google_map(location = geocode('HA9 9SR'),
                                                    zoom = 12)})
   #When clicking the button "Show Route"
   observeEvent(input$Btn_show_route, {
