@@ -5,10 +5,8 @@ library(dplyr)
 library(leaflet)
 library(googleway)
 library(ggmap)
-df_acc <- read.csv("C:/Users/harsh/Documents/R/Project1/train_set_wo_norm.csv")
-set.seed(100)
-idx <-sample(nrow(df_acc),1000, replace = FALSE)
-sample_df <- df_acc[idx,]
+df_acc <- read.csv("c:/users/harsh/documents/project resources/datasets for accidents/accidents/accidents_2015.csv")
+sample_df <- df_acc[c(1:1000),]
 
 ui <- dashboardPage(
   dashboardHeader(title = "Accidents Analysis and Predictive Modeling"),
@@ -24,8 +22,8 @@ ui <- dashboardPage(
     tabItems(
       tabItem(tabName = "tab_analysis", 
                 leafletOutput("my_map"),
-                selectInput("select_var", "Select Variables", choices = c("Road_Type","X1st_Road_Class", "Day_of_Week","Journey_Purpose_of_Driver","Sex_of_Driver","Age_Band_of_Driver")),
-                plotOutput("coolplot"),br(),br()),
+                selectInput("select_var", "Select Variables", choices = c("Road_Type","X1st_Road_Class", "Light_Conditions" )),
+                plotOutput("coolplot"),br(),br(),br()),
       tabItem(tabName = "tab_modeling", h1("Modeling Menu Activated")),
       tabItem(tabName = "tab_prediction", 
               textInput("txtPcodeSrc", "Enter Source Address", value = "HA9 8SR"),
