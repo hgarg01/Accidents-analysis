@@ -5,8 +5,16 @@ library(dplyr)
 library(leaflet)
 library(googleway)
 library(ggmap)
-df_acc <- read.csv("c:/users/harsh/documents/project resources/datasets for accidents/accidents/accidents_2015.csv")
-sample_df <- df_acc[c(1:1000),]
+library(plyr)
+df_acc <- read.csv("c:/users/harsh/documents/R/comb_df.csv")
+idx <-sample(nrow(df_acc),1000, replace = FALSE)
+sample_df<- df_acc[idx,]
+model <- readRDS("C:/Users/harsh/Documents/R/Project1/rf_model_cutoff_0.6_0.4.rds")
+df_acc$Day_of_Week <- mapvalues(df_acc$Day_of_Week, c("1","2","3","4","5","6","7"),c("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"), warn_missing = FALSE)
+df_acc$Sex_of_Driver <- mapvalues(df_acc$Sex_of_Driver, c("1","2","3"), c("Male","Female","Unknown"))
+df_acc$Road_Type <- as.factor(df_acc$Road_Type)
+df_acc$Road_Type <- mapvalues(df_acc$Road_Type, c("1","2","3","6","7","9"),c("Roundabout","One way street","Dual carriageway",
+                                                                             "Single carriageway","Slip road","Unknown"))
 
 ui <- dashboardPage(
   dashboardHeader(title = "Accidents Analysis and Predictive Modeling"),
@@ -22,9 +30,9 @@ ui <- dashboardPage(
     tabItems(
       tabItem(tabName = "tab_analysis", 
                 leafletOutput("my_map"),
-                selectInput("select_var", "Select Variables", choices = c("Road_Type","X1st_Road_Class", "Light_Conditions" )),
+                selectInput("select_var", "Select Variables", choices = c("Road_Type","X1st_Road_Class", "Day_of_Week", "Time_Hour","Month","Sex_of_Driver" )),
                 plotOutput("coolplot"),br(),br(),br()),
-      tabItem(tabName = "tab_modeling", h1("Modeling Menu Activated")),
+      tabItem(tabName = "tab_modeling", h1("Modeling Menu Activated"), textOutput("model_summary")),
       tabItem(tabName = "tab_prediction", 
               textInput("txtPcodeSrc", "Enter Source Address", value = "HA9 8SR"),
               textInput("txtPcodeDest", "Enter Destination Address", value = "NW1 2DB"),
@@ -46,6 +54,9 @@ server <- function(input, output) {
     ggplot(df_acc)+geom_bar(aes(x=!! col1, fill = as.factor(Accident_Severity)))+theme_bw()  +labs(y = "Number of accidents",title= "Accident Severity vs Day of week")
   })
   
+  output$model_summary <- renderPrint({
+      summary(model)
+  })
   #Plot accident data plots on UK map
   output$my_map = renderLeaflet({
     m <- leaflet(data = df_acc) %>% addTiles() %>%

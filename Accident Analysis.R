@@ -44,7 +44,7 @@ nrow(AADF[!complete.cases(AADF),])
 
 #find out columns having values -1, which means missing data
 sapply(accidents_2015, function(x)sum(x=='-1'))
-#delete the columns with more than 30% values as -1
+#delete the columns with more than 30% missing values i.e missing value as -1
 accidents_2015 <- select(accidents_2015, - c( X2nd_Road_Class,Junction_Control))
 accidents_2016 <- select(accidents_2016, - c( X2nd_Road_Class,Junction_Control))
 
@@ -1090,7 +1090,7 @@ acc_AADF_veh_16<- merge(acc_AADF_16,veh_2016[!duplicated(veh_2016$Accident_Index
 acc_AADF_veh_16 <- acc_AADF_veh_16[keep]
 
 combined_df <- rbind(acc_AADF_veh_15, acc_AADF_veh_16)
-
+saveRDS(combined_df, 'C:/Users/harsh/Documents/R/Project1/combined_df.rds')
 #Merging levels with minimal values
 levels(combined_df$Weather_Conditions) 
 levels(combined_df$Journey_Purpose_of_Driver) = c(6,1,2,3,4,5,6)
@@ -1111,18 +1111,22 @@ combined_df$Month_Y <- cos(2*pi*combined_df$Month/12)
 #feature engineering on road_name
 mean_encoding<- function(df){
   df_road <- select(df,road_name, Accident_Severity)
-  df1 <- df_road %>% group_by(road_name) %>%  summarise(total = n())
+  df1 <- df_road %>% dplyr::group_by(road_name) %>%  dplyr::summarise(total = n())
   df2 <- df_road %>% group_by(road_name) %>% filter(Accident_Severity == 1) %>% count()
   df3 <- merge(df1,df2,by = "road_name", all.x= TRUE)
   df3[is.na(df3)] <- 0
-  df3$mean_encode <- df3$n/df3$total
+  df3$mean_encode <- df3$freq/df3$total
   df <- merge(df,df3,by = "road_name", all.x = TRUE)
-  df <- select(df,-c(road_name,total,n))
+  df <- select(df,-c(Accident_Severity.y,total,freq,road_name))
   df[is.na(df)] <- 0
   return(df)
 }
 
 combined_df <- mean_encoding(combined_df)
+###########################################################################################
+#Save the mean encoding and all_motor_vehicles values for every road name in a table to be used during prediction
+road_details <- sqldf('select road_name, Longitude, Latitude, X1st_Road_Class, Road_Type, all_motor_vehicles, mean_encode from combined_df')
+saveRDS(road_details, 'C:/Users/harsh/Documents/R/Project1/road_details.rds')
 
 ###########################################################################################
 #Calculate importance of all the features in the dataset and drop the features with high p-values
