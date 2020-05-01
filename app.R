@@ -22,7 +22,7 @@ df_acc$Road_Type <- as.factor(df_acc$Road_Type)
 df_acc$Road_Type <- mapvalues(df_acc$Road_Type, c("1","2","3","6","7","9"),c("Roundabout","One way street","Dual carriageway",
                                                                              "Single carriageway","Slip road","Unknown"))
 #register google key
-#my_key <- "AIzaSyDYgR-37yrL2DhsicCBcq1Vw80IWIkzvXw"
+
 register_google(my_key)
 set_key(my_key)
 
