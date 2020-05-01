@@ -1115,9 +1115,9 @@ mean_encoding<- function(df){
   df2 <- df_road %>% group_by(road_name) %>% filter(Accident_Severity == 1) %>% count()
   df3 <- merge(df1,df2,by = "road_name", all.x= TRUE)
   df3[is.na(df3)] <- 0
-  df3$mean_encode <- df3$freq/df3$total
+  df3$mean_encode <- df3$n/df3$total
   df <- merge(df,df3,by = "road_name", all.x = TRUE)
-  df <- select(df,-c(Accident_Severity.y,total,freq,road_name))
+  df <- select(df,-c(Accident_Severity,total,n))
   df[is.na(df)] <- 0
   return(df)
 }
@@ -1125,7 +1125,7 @@ mean_encoding<- function(df){
 combined_df <- mean_encoding(combined_df)
 ###########################################################################################
 #Save the mean encoding and all_motor_vehicles values for every road name in a table to be used during prediction
-road_details <- sqldf('select road_name, Longitude, Latitude, X1st_Road_Class, Road_Type, all_motor_vehicles, mean_encode from combined_df')
+road_details <- sqldf('select road_name, Longitude, Latitude, X1st_Road_Class, Road_Type,Urban_or_Rural_Area, all_motor_vehicles, mean_encode from combined_df')
 saveRDS(road_details, 'C:/Users/harsh/Documents/R/Project1/road_details.rds')
 
 ###########################################################################################
@@ -1135,13 +1135,13 @@ comparison
 createTable(comparison)
 
 
-drop_columns <- c("Date","Pedestrian_Crossing.Human_Control","Weather_Conditions","Light_Conditions","Road_Surface_Conditions","Special_Conditions_at_Site","Carriageway_Hazards","Vehicle_Type","Month","Time_Hour")
+drop_columns <- c("Date","road_name","Pedestrian_Crossing.Human_Control","Weather_Conditions","Light_Conditions","Road_Surface_Conditions","Special_Conditions_at_Site","Carriageway_Hazards","Vehicle_Type","Month","Time_Hour")
 combined_df <- combined_df %>% select(-one_of(drop_columns)) 
 
 
 ggplot(combined_df)+geom_density(aes(x=combined_df$mean_encode, color = Accident_Severity))
 write.csv(combined_df, "C:\\Users\\harsh\\Documents\\R\\Project1\\final_df_without_norm.csv",row.names = FALSE)
-saveRDS(combined_df, "C:\\Users\\harsh\\Documents\\R\\Project1\\final_df_wo_norm.rds")
+saveRDS(combined_df, "C:\\Users\\harsh\\Documents\\R\\Project1\\combined_df.rds")
 
 
 #Normalization of all the numeric variables
