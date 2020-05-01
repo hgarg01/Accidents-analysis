@@ -8,7 +8,7 @@ library(naivebayes)
 library(dplyr)
 
 #Read the data frame and set factor variables
-df=readRDS("C:/Users/harsh/Documents/R/Project1/final_df.rds")
+df=readRDS("C:/Users/harsh/Documents/R/Project1/combined_df.rds")
 df = read.csv("c:/users/harsh/documents/R/Project1/final_df_without_norm.csv")
 cat_vars <- c("Accident_Severity", "Day_of_Week", "X1st_Road_Class", "Road_Type", "Junction_Detail", "Pedestrian_Crossing.Physical_Facilities","Urban_or_Rural_Area", "Journey_Purpose_of_Driver","Sex_of_Driver", "Age_Band_of_Driver","Vehicle_Manoeuvre" )
 df[,cat_vars] <-data.frame(apply(df[cat_vars],2,as.factor))
