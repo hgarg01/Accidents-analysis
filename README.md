@@ -27,9 +27,15 @@ A plot between the different number of samples available for different accident 
 Following algorithms are used for predictive modeling in this project:
 1. Naive Bayes
 2. Multinomial Regression
-3. Weighted Random Forest
-4. Ensemble of the above models
+3. Random Forest
+4. Adaboost
+5. Training the above models on sampled data
+6. Training the above models on cost based learning
+7. Ensemble of the above algorithms
+### Final Model
+All the models above were developed in Python and trained on floyd hub cloud for faster convergence.
+Weighted Random Forest emerged as a winner in terms of the f2-measure. It provided best f2 measure and the best recall for the class 1.
 ### Front End
-Front end is being developed in Rshiny and aims to show warning on the route chosen by user if there is high probability of fatal/serious accident on some route.
-## Status
-The exploratory analysis part of the project is more or less done. Various algorithms are used and evaluated for best performance. Some algorithms are being run on the **AWS cloud** to overcome the memory and processing limitations presesnted by the laptop. Different ensembles are being tried to see what is the best accuracy that we can obtain. Front end of the project is in the initial stage and needs a bit of work before it can be presesnted here.
+Front end is developed in Rshiny and it displays the percentage of accident probability on the route chosen by the user and claculates and plots high risk areas along the route.
+A brief overview of the front end could be find here :-
+https://www.youtube.com/watch?v=p1gzX0CRXrY&t=57s
