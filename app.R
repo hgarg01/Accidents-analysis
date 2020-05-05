@@ -6,6 +6,7 @@ library(leaflet)
 library(googleway)
 library(ggmap)
 library(plyr)
+library(randomForest)
 library(caret)
 library(geosphere)
 library(stringi)
@@ -84,10 +85,11 @@ server <- function(input, output) {
   
   
   #observe teh selction of variables and draw plots
-  observe(print(input$select_var))
+  observe(input$select_var)
   output$coolplot <- renderPlot({
+    sel<-input$select_var
     col1 <- sym(input$select_var)
-    ggplot(df_acc)+geom_bar(aes(x=!! col1, fill = as.factor(Accident_Severity)))+theme_bw()  +labs(y = "Number of accidents",title= "Accident Severity vs Day of week")
+    ggplot(df_acc)+geom_bar(aes(x=!! col1, fill = as.factor(Accident_Severity)))+theme_bw()  +labs(y = "Number of accidents",title= paste("Accident Severity vs ",sel))
   })
   
   #observe the radio button for plotting image and display on screen
