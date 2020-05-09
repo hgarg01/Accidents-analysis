@@ -12,11 +12,11 @@ This project uses the following databases :-
 2. Vehicle Database : This data is also obtained from the above mentioned source and includes details regarding the vehicles involved in the accidents. 
 3. Traffic Flow Data : This data describes the annual average volume of traffic flow at the location of the accident and has been obtained from https://data.gov.uk/dataset/9562c512-4a0b-45ee-b6ad-afc0f99b841f/highways-england-network-journey-time-and-traffic-flow-data
 ## Project Files
-This Project is being built in R and is divided into 3 files : AccidentAnalysis, Models and FrontEnd. AccidentAnalysis includes the detailes analysis of the 3 tables and all the preprocessing. Models file contains the algorithms used to build models and evaluate performance and FrontEnd contains the front end of the project being developed in RShiny. 
+This analysis part of this Project is done in R, modelling in Python and front end in Rshiny.
 ## Method and Methodology
 After importing the tables thorough data cleaning, data is preprocessed. Some fields are changed so that they become consistent across all the tables. Redundant levels of some categorical columns are removed and datatypes of all the fields are fixed as they should be.
 ### Feature Elimination
-Some feathures that don't seem to be contributing much for our final analysis model are removed after comparing the correlation values and Chi squared vales.
+Some feathures that don't seem to be contributing much for the final analysis model are removed after comparing the correlation values and Chi squared vales.
 ### Feature Engineering
 Hour and Month fields are cyclic features. They are encoded using sine and cosine transformations. Road name is another important feature for the predictive model and has more that 5000 different categories, thus making it unsuitable for most of the predictive algorithms. This feature is encoded using mean encoding.
 ### Exploratory Data Analysis
