@@ -1,4 +1,4 @@
-# Detailed Analysis of Motor Accidents happening on the UK roads
+# Identification and Analysis of Key Factors Responsible for Motor Accidents Across the UK roads
 ## Motivation
 There are several motor accidents that happen every day around the globe. The analysis of these motor accidents can help provide critical actionable insights to facilitate informed decisions and drive business outcomes (such as reducing accidents, saving lives etc.) and business applications to reduce costs (Motor Vehicle Repair Claims, Personal Injury Claims etc).
 ## Aim of the project 
